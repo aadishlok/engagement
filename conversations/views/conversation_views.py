@@ -5,6 +5,7 @@ from ..services.conversation_service import get_conversation_by_id, create_conve
 from rest_framework.exceptions import AuthenticationFailed
 from ..authentication import APIKeyAuthentication
 from ..serializers import ConversationCreateSerializer
+from ..utils import validate_uuid
 
 
 @extend_schema(
@@ -81,8 +82,11 @@ from ..serializers import ConversationCreateSerializer
 )
 @api_view(["GET", "DELETE"])
 def get_or_delete_conversation_view(request, id):
+    # Validate UUID format
+    validated_id = validate_uuid(id, "id")
+    
     if request.method == "GET":
-        return get_conversation_by_id(conversation_id=id)
+        return get_conversation_by_id(conversation_id=validated_id)
     elif request.method == "DELETE":
         # Check authentication for DELETE requests
         authenticator = APIKeyAuthentication()
@@ -91,7 +95,7 @@ def get_or_delete_conversation_view(request, id):
         except Exception:
             raise AuthenticationFailed('Invalid API Key')
         
-        return delete_conversation(conversation_id=id)
+        return delete_conversation(conversation_id=validated_id)
 
 
 @extend_schema(

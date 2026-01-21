@@ -1,4 +1,5 @@
 import logging
+import uuid
 from rest_framework.views import exception_handler
 from rest_framework.response import Response
 from rest_framework import status
@@ -12,7 +13,6 @@ def prepare_exception_handler(exc, context):
     response = exception_handler(exc, context)
 
     if response is not None:
-        # Determine error message based on status code
         if response.status_code == status.HTTP_400_BAD_REQUEST:
             error_message = "Validation error"
         elif response.status_code == status.HTTP_401_UNAUTHORIZED:
@@ -21,6 +21,8 @@ def prepare_exception_handler(exc, context):
             error_message = "Permission denied"
         elif response.status_code == status.HTTP_404_NOT_FOUND:
             error_message = "Resource not found"
+        elif response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED:
+            error_message = "Method not allowed"
         elif response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR:
             error_message = "Internal server error"
         else:
@@ -47,6 +49,16 @@ def prepare_exception_handler(exc, context):
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     return response
+
+
+def validate_uuid(uuid_string, param_name="id"):
+    """Validate UUID format and raise ValidationError if invalid"""
+    try:
+        uuid.UUID(str(uuid_string))
+        return str(uuid_string)
+    except (ValueError, TypeError, AttributeError):
+        from rest_framework.exceptions import ValidationError
+        raise ValidationError({param_name: [f"Invalid UUID format: '{uuid_string}'"]})
 
 
 def prepare_success_response(data=None, message="Success", status_code=200):

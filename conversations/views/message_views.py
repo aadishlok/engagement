@@ -6,6 +6,7 @@ from ..services import message_service
 from ..authentication import APIKeyAuthentication
 from ..serializers import MessageCreateSerializer
 from rest_framework.exceptions import AuthenticationFailed
+from ..utils import validate_uuid
 
 
 @extend_schema(
@@ -152,8 +153,10 @@ from rest_framework.exceptions import AuthenticationFailed
 )
 @api_view(["GET", "POST"])
 def get_or_create_message_view(request, id):
+    validated_id = validate_uuid(id, "id")
+    
     if request.method == "GET":
-        return message_service.get_messages_by_conversation_id(id, request)
+        return message_service.get_messages_by_conversation_id(validated_id, request)
     elif request.method == "POST":
         authenticator = APIKeyAuthentication()
         try:
@@ -161,7 +164,7 @@ def get_or_create_message_view(request, id):
         except Exception:
             raise AuthenticationFailed('Invalid API Key')
         
-        return message_service.create_message(id, request)
+        return message_service.create_message(validated_id, request)
 
 
 @extend_schema(
@@ -207,4 +210,8 @@ def get_or_create_message_view(request, id):
 @api_view(['DELETE'])
 @authentication_classes([APIKeyAuthentication])
 def delete_message_view(request, id, message_id):
-    return message_service.delete_message(id, message_id)
+    # Validate UUID formats
+    validated_id = validate_uuid(id, "id")
+    validated_message_id = validate_uuid(message_id, "message_id")
+    
+    return message_service.delete_message(validated_id, validated_message_id)

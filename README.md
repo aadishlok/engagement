@@ -33,6 +33,13 @@ This will start both the PostgreSQL database and Django web application. The API
 
 The database migrations and tests will run automatically on startup. The PostgreSQL database will be available on port `5432` if you need to connect directly.
 
+3. View Logs:
+```bash
+docker-compose logs -f
+```
+
+This will show the logs generated while the docker compose command was running.
+
 ## Local Development Setup
 
 ### Prerequisites

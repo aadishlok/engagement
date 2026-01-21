@@ -21,12 +21,13 @@ from drf_spectacular.views import (
     SpectacularRedocView,
     SpectacularSwaggerView,
 )
+from conversations.views.error_handlers import handler_404_view
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("conversations/", include("conversations.urls")),
-    # OpenAPI schema endpoints
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("swagger/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
     path("redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
+    path("<path:path>", handler_404_view, name="handler-404"),
 ]
