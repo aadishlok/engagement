@@ -68,6 +68,9 @@ def create_message(conversation_id: str, request):
     message = serializer.save()
     serialized_message = MessageSerializer(message)
     
+    response_data = serialized_message.data
+    assistant_message = None
+    
     if message.role == 'user':
         try:
             assistant_response_text = get_assistant_response(message.text)
@@ -78,15 +81,18 @@ def create_message(conversation_id: str, request):
             }
             assistant_serializer = MessageCreateSerializer(data=assistant_message_data)
             assistant_serializer.is_valid(raise_exception=True)
-            assistant_serializer.save()
+            assistant_message = assistant_serializer.save()
+            assistant_serialized = MessageSerializer(assistant_message)
+            response_data['assistant_response'] = assistant_serialized.data
         except Exception as e:
             log_error(
                 f"Failed to generate assistant response: {e}",
                 {"conversation_id": str(message.conversation.conversation_id), "error": str(e)}
             )
+            response_data['assistant_response'] = None
     
     return prepare_success_response(
-        data=serialized_message.data,
+        data=response_data,
         message="Message created successfully",
         status_code=status.HTTP_201_CREATED
     )

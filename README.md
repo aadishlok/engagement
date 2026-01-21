@@ -240,18 +240,48 @@ Add a message to a conversation. **Requires authentication.** If the message rol
 ```
 
 **Response:** `201 Created`
+
+When creating a **user message**, the response includes the assistant response in the `assistant_response` property:
 ```json
 {
-  "message_id": "660e8400-e29b-41d4-a716-446655440001",
-  "conversation": "550e8400-e29b-41d4-a716-446655440000",
-  "role": "user",
-  "text": "Hello, how are you?",
-  "date_created": "2024-01-19T12:00:00Z",
-  "date_updated": "2024-01-19T12:00:00Z"
+  "code": 201,
+  "message": "Message created successfully",
+  "data": {
+    "message_id": "660e8400-e29b-41d4-a716-446655440001",
+    "conversation": "550e8400-e29b-41d4-a716-446655440000",
+    "role": "user",
+    "text": "Hello, how are you?",
+    "date_created": "2024-01-19T12:00:00Z",
+    "date_updated": "2024-01-19T12:00:00Z",
+    "assistant_response": {
+      "message_id": "660e8400-e29b-41d4-a716-446655440002",
+      "conversation": "550e8400-e29b-41d4-a716-446655440000",
+      "role": "assistant",
+      "text": "Hello! How can I assist you today?",
+      "date_created": "2024-01-19T12:00:01Z",
+      "date_updated": "2024-01-19T12:00:01Z"
+    }
+  }
 }
 ```
 
-**Note**: When creating a user message, an assistant response is automatically generated synchronously before the API returns. Both the user message and assistant response are created in the same request.
+When creating an **assistant message** directly, the response does not include `assistant_response`:
+```json
+{
+  "code": 201,
+  "message": "Message created successfully",
+  "data": {
+    "message_id": "660e8400-e29b-41d4-a716-446655440003",
+    "conversation": "550e8400-e29b-41d4-a716-446655440000",
+    "role": "assistant",
+    "text": "I'm doing well, thank you!",
+    "date_created": "2024-01-19T12:00:02Z",
+    "date_updated": "2024-01-19T12:00:02Z"
+  }
+}
+```
+
+**Note**: When creating a user message, an assistant response is automatically generated synchronously before the API returns. The assistant response is included in the API response within the `assistant_response` property of the `data` object. If assistant response generation fails, `assistant_response` will be `null`.
 
 **Example:**
 ```bash
@@ -378,7 +408,7 @@ The API includes a simple rule-based assistant response generator that runs **sy
 1. The user message is saved
 2. An assistant response is generated immediately using rule-based logic
 3. The assistant response is saved
-4. The API returns the user message response
+4. The API returns both the user message and assistant response in a single response, with the assistant response included in the `assistant_response` property of the `data` object
 
 **Response Patterns:**
 - Greetings ("hello", "hi", "hey") → "Hello! How can I assist you today?"
