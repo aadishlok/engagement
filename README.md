@@ -6,10 +6,10 @@ A Django REST Framework backend API for managing conversations and messages for 
 
 - RESTful API for managing conversations and messages
 - API key-based authentication (required for POST/DELETE operations)
-- Automatic assistant response generation with async background processing
+- Automatic assistant response generation (synchronous)
 - Pagination and filtering support for message listings
-- SQLite database with proper migrations and schema evolution
-- Docker containerization support
+- PostgreSQL database with proper migrations and schema evolution
+- Docker containerization support with multi-service orchestration
 - Comprehensive test suite
 - Logging and observability
 
@@ -17,7 +17,7 @@ A Django REST Framework backend API for managing conversations and messages for 
 
 - **Framework**: Django 4.2.7
 - **API**: Django REST Framework 3.14.0
-- **Database**: SQLite (can be easily switched to PostgreSQL)
+- **Database**: PostgreSQL 15
 - **Containerization**: Docker & Docker Compose
 
 ## Quick Start with Docker (Recommended)
@@ -34,23 +34,21 @@ git clone <repository-url>
 cd engagement
 ```
 
-2. Start the service:
+2. Start the services:
 ```bash
 docker-compose up --build
 ```
 
-The API will be available at `http://localhost:8000`
+This will start both the PostgreSQL database and Django web application. The API will be available at `http://localhost:8000`
 
-3. Run migrations (if needed):
-```bash
-docker-compose exec web python manage.py migrate
-```
+The database migrations and tests will run automatically on startup. The PostgreSQL database will be available on port `5432` if you need to connect directly.
 
 ## Local Development Setup
 
 ### Prerequisites
 - Python 3.11+
 - pip
+- PostgreSQL 15+ (or use Docker Compose for database)
 
 ### Steps
 
@@ -71,17 +69,38 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-4. Run migrations:
+4. Set up PostgreSQL database:
+   - Create a database named `engagement_db`
+   - Create a user `engagement_user` with password `engagement_password`
+   - Or use Docker Compose: `docker-compose up db` (in a separate terminal)
+
+5. Set environment variables (or use defaults):
+```bash
+export DB_NAME=engagement_db
+export DB_USER=engagement_user
+export DB_PASSWORD=engagement_password
+export DB_HOST=localhost  # Use 'db' if using Docker Compose for database
+export DB_PORT=5432
+```
+
+6. Create logs directory:
+```bash
+mkdir -p logs
+```
+
+7. Run migrations:
 ```bash
 python manage.py migrate
 ```
 
-5. Start the development server:
+8. Start the development server:
 ```bash
 python manage.py runserver
 ```
 
 The API will be available at `http://localhost:8000`
+
+**Note**: For local development, you can also use Docker Compose to run just the database service (`docker-compose up db`) and connect your local Django app to it by setting `DB_HOST=localhost`.
 
 ## Running Tests
 
@@ -118,8 +137,8 @@ X-API-Key: neuRealities_assessment
 - `GET /conversations/{id}` - No authentication required
 - `GET /conversations/{id}/messages` - No authentication required
 - `POST /conversations/` - Authentication required
-- `POST /conversations/{id}/messages/create` - Authentication required
-- `DELETE /conversations/{id}/delete` - Authentication required
+- `POST /conversations/{id}/messages` - Authentication required
+- `DELETE /conversations/{id}` - Authentication required
 - `DELETE /conversations/{id}/messages/{message_id}` - Authentication required
 
 ### Endpoints
@@ -192,7 +211,7 @@ curl -X GET "http://localhost:8000/conversations/550e8400-e29b-41d4-a716-4466554
 
 #### 3. Delete a Conversation
 
-**DELETE** `/conversations/{id}/delete`
+**DELETE** `/conversations/{id}`
 
 Delete a conversation and all its associated messages. **Requires authentication.**
 
@@ -200,7 +219,7 @@ Delete a conversation and all its associated messages. **Requires authentication
 
 **Example:**
 ```bash
-curl -X DELETE http://localhost:8000/conversations/550e8400-e29b-41d4-a716-446655440000/delete \
+curl -X DELETE http://localhost:8000/conversations/550e8400-e29b-41d4-a716-446655440000 \
   -H "X-API-Key: neuRealities_assessment"
 ```
 
@@ -208,9 +227,9 @@ curl -X DELETE http://localhost:8000/conversations/550e8400-e29b-41d4-a716-44665
 
 #### 4. Create a Message
 
-**POST** `/conversations/{id}/messages/create`
+**POST** `/conversations/{id}/messages`
 
-Add a message to a conversation. **Requires authentication.** If the message role is "user", an assistant response will be automatically generated in the background using async processing.
+Add a message to a conversation. **Requires authentication.** If the message role is "user", an assistant response will be automatically generated synchronously.
 
 **Request Body:**
 ```json
@@ -232,11 +251,11 @@ Add a message to a conversation. **Requires authentication.** If the message rol
 }
 ```
 
-**Note**: When creating a user message, an assistant response is automatically generated in a background thread. The API returns immediately with the user message, and the assistant response is created asynchronously.
+**Note**: When creating a user message, an assistant response is automatically generated synchronously before the API returns. Both the user message and assistant response are created in the same request.
 
 **Example:**
 ```bash
-curl -X POST http://localhost:8000/conversations/550e8400-e29b-41d4-a716-446655440000/messages/create \
+curl -X POST http://localhost:8000/conversations/550e8400-e29b-41d4-a716-446655440000/messages \
   -H "Content-Type: application/json" \
   -H "X-API-Key: neuRealities_assessment" \
   -d '{"text": "Hello!", "role": "user"}'
@@ -354,12 +373,12 @@ All errors follow a consistent format:
 
 ## Assistant Response Generation
 
-The API includes a simple rule-based assistant response generator with **async background processing**. When a user message is created:
+The API includes a simple rule-based assistant response generator that runs **synchronously**. When a user message is created:
 
-1. The user message is saved immediately
-2. The API returns the user message response right away
-3. Assistant response generation runs in a background thread (non-blocking)
-4. The assistant response is saved asynchronously
+1. The user message is saved
+2. An assistant response is generated immediately using rule-based logic
+3. The assistant response is saved
+4. The API returns the user message response
 
 **Response Patterns:**
 - Greetings ("hello", "hi", "hey") → "Hello! How can I assist you today?"
@@ -368,7 +387,7 @@ The API includes a simple rule-based assistant response generator with **async b
 - Thanks → "You're welcome! Is there anything else I can help with?"
 - Default → "I understand. Can you tell me more about that?"
 
-This async approach ensures fast API response times while assistant responses are generated in the background.
+**Note**: The current implementation is synchronous. For production scale with slower AI integrations, consider implementing async processing using background threads, Celery with Redis/RabbitMQ, or Django's async views.
 
 ## Database Migrations
 
@@ -383,8 +402,8 @@ python manage.py migrate
 ```
 
 The project includes:
-- Initial migration: Creates Conversation and Message tables
-- Second migration: Adds `role` field to Message and `title` field to Conversation, demonstrating schema evolution
+- Initial migration (`0001_initial.py`): Creates Conversation and Message tables without the `title` field
+- Second migration (`0002_conversation_title.py`): Adds `title` field to Conversation model, demonstrating schema evolution
 
 ## Project Structure
 
@@ -428,9 +447,9 @@ Log levels:
 
 1. **Authentication**: GET endpoints are public for better API usability, while POST/DELETE operations require authentication for security.
 
-2. **Database**: SQLite is used for simplicity and ease of deployment. For production, PostgreSQL is recommended.
+2. **Database**: PostgreSQL is used as the primary database, providing production-ready features including better concurrency, performance, and scalability compared to SQLite. The database runs as a separate Docker service with health checks and persistent storage.
 
-3. **Assistant Responses**: Simple rule-based responses are used instead of real AI integration, as per requirements. Responses are generated asynchronously in background threads to ensure fast API response times.
+3. **Assistant Responses**: Simple rule-based responses are used instead of real AI integration, as per requirements. Responses are generated synchronously. For production scale, consider implementing async processing using background threads or task queues (e.g., Celery with Redis/RabbitMQ).
 
 4. **Pagination**: Page-based pagination is implemented for message listings to handle large conversations efficiently.
 
@@ -438,7 +457,7 @@ Log levels:
 
 6. **UUID Primary Keys**: UUIDs are used instead of auto-incrementing integers for better distributed system compatibility.
 
-7. **Async Processing**: Background threading is used for assistant response generation to avoid blocking API responses. For production scale, consider using Celery with Redis/RabbitMQ.
+7. **Assistant Response Processing**: Assistant responses are generated synchronously. The code includes comments on how threading could be utilized for async processing if needed. For production scale with slower AI integrations, consider using Celery with Redis/RabbitMQ or Django's async views.
 
 8. **Logging**: Comprehensive logging is implemented for observability. In production, consider integrating with log aggregation services (e.g., ELK stack, CloudWatch).
 

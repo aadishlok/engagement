@@ -17,9 +17,6 @@ ENV DJANGO_SETTINGS_MODULE=engagement.settings
 
 RUN mkdir -p logs
 
-RUN python manage.py migrate --noinput && \
-    python manage.py test conversations.tests --noinput
-
 COPY . .
 
 COPY entrypoint.sh .
