@@ -442,27 +442,6 @@ The project includes:
 - Initial migration (`0001_initial.py`): Creates Conversation and Message tables without the `title` field
 - Second migration (`0002_conversation_title.py`): Adds `title` field to Conversation model, demonstrating schema evolution
 
-## Project Structure
-
-```
-engagement/
-├── conversations/          # Main app
-│   ├── migrations/         # Database migrations
-│   ├── services/           # Business logic layer
-│   ├── views/              # API views
-│   ├── models.py           # Data models
-│   ├── serializers.py      # Request/response serializers
-│   ├── authentication.py  # API key authentication
-│   ├── tests.py            # Test suite
-│   └── urls.py             # URL routing
-├── engagement/             # Django project settings
-├── manage.py               # Django management script
-├── requirements.txt        # Python dependencies
-├── Dockerfile              # Docker configuration
-├── docker-compose.yml      # Docker Compose configuration
-└── README.md               # This file
-```
-
 ## Logging and Observability
 
 The API includes comprehensive logging for:
