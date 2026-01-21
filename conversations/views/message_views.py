@@ -5,6 +5,7 @@ from drf_spectacular.types import OpenApiTypes
 from ..services import message_service
 from ..authentication import APIKeyAuthentication
 from ..serializers import MessageCreateSerializer
+from rest_framework.exceptions import AuthenticationFailed
 
 
 @extend_schema(
@@ -91,11 +92,6 @@ from ..serializers import MessageCreateSerializer
     tags=["Messages"],
     auth=[],
 )
-@api_view(['GET'])
-def get_messages_view(request, id):
-    return message_service.get_messages_by_conversation_id(id, request)
-
-
 @extend_schema(
     methods=["POST"],
     summary="Create a message",
@@ -154,10 +150,18 @@ def get_messages_view(request, id):
     ],
     tags=["Messages"],
 )
-@api_view(['POST'])
-@authentication_classes([APIKeyAuthentication])
-def create_message_view(request, id):
-    return message_service.create_message(id, request)
+@api_view(["GET", "POST"])
+def get_or_create_message_view(request, id):
+    if request.method == "GET":
+        return message_service.get_messages_by_conversation_id(id, request)
+    elif request.method == "POST":
+        authenticator = APIKeyAuthentication()
+        try:
+            authenticator.authenticate(request)
+        except Exception:
+            raise AuthenticationFailed('Invalid API Key')
+        
+        return message_service.create_message(id, request)
 
 
 @extend_schema(
