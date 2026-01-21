@@ -1,0 +1,12 @@
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./db.sqlite3:/app/db.sqlite3
+      - .:/app
+      - ./logs:/app/logs
+    environment:
+      - DEBUG=True
+      - API_KEY=neuRealities_assessment

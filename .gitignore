@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+.Python
+build/
+dist/
+
+# Virtual Environments
+venv/
+.venv/
+
+# Django
+*.log
+*.pot
+*.pyc
+db.sqlite3
+db.sqlite3-journal
+/media
+/staticfiles
+/static
+*.local.py
+
+# Django migrations (uncomment if you don't want to track migrations)
+# */migrations/*.py
+# !*/migrations/__init__.py
+
+# Environment variables
+*.env*
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
+
+# Logs
+logs/
+*.log
+
+# Testing
+.pytest_cache/
+
+# Docker
+.dockerignore
+
+# Project specific
+*.sqlite3
+*.db
