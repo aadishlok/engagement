@@ -1,17 +1,6 @@
-# AI Chat Assistant Backend API
+# Engagement API
 
 A Django REST Framework backend API for managing conversations and messages for an AI chat assistant. This project demonstrates skills in API design, data modeling, authentication, and deployment readiness.
-
-## Features
-
-- RESTful API for managing conversations and messages
-- API key-based authentication (required for POST/DELETE operations)
-- Automatic assistant response generation (synchronous)
-- Pagination and filtering support for message listings
-- PostgreSQL database with proper migrations and schema evolution
-- Docker containerization support with multi-service orchestration
-- Comprehensive test suite
-- Logging and observability
 
 ## Tech Stack
 
@@ -19,6 +8,7 @@ A Django REST Framework backend API for managing conversations and messages for 
 - **API**: Django REST Framework 3.14.0
 - **Database**: PostgreSQL 15
 - **Containerization**: Docker & Docker Compose
+
 
 ## Quick Start with Docker (Recommended)
 
@@ -49,6 +39,7 @@ The database migrations and tests will run automatically on startup. The Postgre
 - Python 3.11+
 - pip
 - PostgreSQL 15+ (or use Docker Compose for database)
+- docker
 
 ### Steps
 
@@ -102,6 +93,17 @@ The API will be available at `http://localhost:8000`
 
 **Note**: For local development, you can also use Docker Compose to run just the database service (`docker-compose up db`) and connect your local Django app to it by setting `DB_HOST=localhost`.
 
+## Features
+
+- RESTful API for managing conversations and messages
+- API key-based authentication (required for POST/DELETE operations)
+- Automatic assistant response generation (synchronous)
+- Pagination and filtering support for message listings
+- PostgreSQL database with proper migrations and schema evolution
+- Docker containerization support with multi-service orchestration
+- Comprehensive test suite
+- Logging and observability
+
 ## Running Tests
 
 To run the test suite:
@@ -113,8 +115,6 @@ docker-compose exec web python manage.py test
 # Local development
 python manage.py test
 ```
-
-## API Documentation
 
 ### Base URL
 ```
@@ -465,9 +465,8 @@ Log levels:
 
 - More sophisticated assistant response generation (e.g., LLM integration)
 - Rate limiting
-- PostgreSQL support in docker-compose
 - API versioning
-- Metrics and monitoring (e.g., Prometheus)
+- Metrics and monitoring (e.g., Prometheus / Grafana)
 - Celery integration for more robust async task handling
 
 ## License
