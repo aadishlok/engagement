@@ -3,8 +3,7 @@ from rest_framework import status
 from rest_framework.exceptions import ValidationError
 from unittest.mock import patch, MagicMock
 from conversations.services.conversation_service import create_conversation, delete_conversation
-from conversations.services.message_service import create_message
-from conversations.models import Conversation, Message
+from conversations.models import Conversation
 import uuid
 from django.http import Http404
 
